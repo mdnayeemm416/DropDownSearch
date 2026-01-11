@@ -3,7 +3,6 @@ import 'package:drop_down_search/config/theme/styles_manager.dart';
 import 'package:drop_down_search/search_box.dart';
 import 'package:flutter/material.dart';
 
-
 class DropdownWidget<T> extends StatefulWidget {
   final T? selectedItem;
   final List<T> items;
@@ -195,50 +194,44 @@ class _DropdownWidgetState<T> extends State<DropdownWidget<T>> {
               menuChildren: [
                 if (widget.items.isNotEmpty) SearchBox(controller: searchController, onChanged: filterItems, onClear: () => filterItems("")),
                 Container(
+                  height: 200,
                   width: widget.width,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     color: Theme.of(context).colorScheme.primaryContainer,
                     border: Border.all(color: !isDarkMode ? const Color.fromARGB(255, 233, 233, 233) : const Color.fromARGB(255, 99, 99, 99)),
                   ),
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  child: SingleChildScrollView(
+                  child: ListView.builder(
                     primary: false,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: filteredItems.isNotEmpty
-                          ? filteredItems.map((item) {
-                              return Builder(
-                                builder: (context) {
-                                  final controller = MenuController.maybeOf(context);
-                                  return GestureDetector(
-                                    onTap: () {
-                                      widget.ontap(item);
-                                      setState(() {
-                                        selectedValue = item;
-                                      });
-                                      // Trigger validation after selection
-                                      _formFieldKey.currentState?.validate();
-                                      controller?.close();
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: widget.itemBuilder != null
-                                          ? widget.itemBuilder!(context, item)
-                                          : Text(getLabel(item), style: const TextStyle(fontSize: 14)),
-                                    ),
-                                  );
-                                },
-                              );
-                            }).toList()
-                          : [
-                              const Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Text("No results found", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
-                              ),
-                            ],
-                    ),
+                    shrinkWrap: true,
+                    itemCount: filteredItems.isNotEmpty ? filteredItems.length : 1,
+                    itemBuilder: (context, index) {
+                      // Show "No results found" if list empty
+                      if (filteredItems.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("No results found", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
+                        );
+                      }
+
+                      final item = filteredItems[index];
+                      final controller = MenuController.maybeOf(context);
+
+                      return GestureDetector(
+                        onTap: () {
+                          widget.ontap(item);
+                          setState(() {
+                            selectedValue = item;
+                          });
+                          _formFieldKey.currentState?.validate();
+                          controller?.close();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: widget.itemBuilder != null ? widget.itemBuilder!(context, item) : Text(getLabel(item), style: const TextStyle(fontSize: 14)),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
